@@ -1,0 +1,39 @@
+package com.platform.service;
+
+import com.platform.model.University;
+import com.platform.repository.UniversityRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+public class UniversityService {
+
+    @Autowired
+    private UniversityRepository universityRepository;
+
+    public List<University> getAllUniversities() {
+        return universityRepository.findAll();
+    }
+
+    public List<University> getUniversitiesByCountry(Long countryId) {
+        return universityRepository.findByCountryId(countryId);
+    }
+    
+    public List<University> getUniversitiesByProvider(Long providerId) {
+        return universityRepository.findByProviderId(providerId);
+    }
+
+    public University saveUniversity(University university) {
+        return universityRepository.save(university);
+    }
+
+    public University getUniversityById(Long id) {
+        return universityRepository.findById(id).orElse(null);
+    }
+
+    public void deleteUniversity(Long id) {
+        universityRepository.deleteById(id);
+    }
+}
