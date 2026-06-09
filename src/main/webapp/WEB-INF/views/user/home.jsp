@@ -9,92 +9,206 @@
 
 <jsp:include page="../common/navbar.jsp" />
 
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
+    
+    .hero-section {
+        font-family: 'Poppins', sans-serif;
+        background: linear-gradient(135deg, #f0f9ff 0%, #ffffff 100%);
+        overflow: hidden;
+    }
+    
+    .hero-title {
+        font-weight: 800;
+        letter-spacing: -1px;
+        color: #0f172a;
+    }
+    
+    .hero-title-gradient {
+        background: linear-gradient(135deg, #2563eb 0%, #10b981 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        text-fill-color: transparent;
+    }
+    
+    .hero-masonry {
+        position: relative;
+        height: 500px;
+        width: 100%;
+    }
+    
+    .masonry-img-1 {
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 65%;
+        height: 60%;
+        border-radius: 24px;
+        object-fit: cover;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        z-index: 2;
+        border: 6px solid #fff;
+    }
+    
+    .masonry-img-2 {
+        position: absolute;
+        bottom: 10%;
+        left: 0;
+        width: 55%;
+        height: 55%;
+        border-radius: 24px;
+        object-fit: cover;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        z-index: 3;
+        border: 6px solid #fff;
+    }
+    
+    .masonry-img-3 {
+        position: absolute;
+        bottom: 0;
+        right: 10%;
+        width: 40%;
+        height: 40%;
+        border-radius: 50%;
+        object-fit: cover;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        z-index: 4;
+        border: 6px solid #fff;
+    }
+
+    .hero-cta-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .hero-cta-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.1) !important;
+    }
+
+    .floating-badge {
+        position: absolute;
+        top: 20%;
+        left: -5%;
+        background: white;
+        padding: 10px 20px;
+        border-radius: 50px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        z-index: 5;
+        animation: float 4s ease-in-out infinite;
+    }
+
+    @keyframes float {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-10px); }
+        100% { transform: translateY(0px); }
+    }
+
+    .trust-avatars img {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        border: 2px solid white;
+        margin-left: -10px;
+    }
+    .trust-avatars img:first-child {
+        margin-left: 0;
+    }
+</style>
+
 <!-- Hero Section -->
-<section class="hero-section position-relative pt-5 pb-5" style="background: linear-gradient(135deg, #f0f9ff 0%, #ffffff 100%); overflow: hidden;">
-    <div class="container position-relative pt-lg-4 pb-lg-5" style="z-index: 2;">
+<section class="hero-section position-relative pt-5 pb-5">
+    <!-- Decorative background blobs -->
+    <div style="position: absolute; top: -100px; right: -100px; width: 400px; height: 400px; background: rgba(37, 99, 235, 0.05); border-radius: 50%; filter: blur(40px);"></div>
+    <div style="position: absolute; bottom: -100px; left: -100px; width: 400px; height: 400px; background: rgba(16, 185, 129, 0.05); border-radius: 50%; filter: blur(40px);"></div>
+
+    <div class="container position-relative pt-lg-5 pb-lg-5" style="z-index: 2;">
         <div class="row align-items-center">
             <!-- Left Side: Text and CTAs -->
-            <div class="col-lg-7 pb-5 pb-lg-0">
-                <h1 class="display-4 fw-bolder mb-3" data-aos="fade-up" style="letter-spacing: -1px; color: #1E3A8A !important;">
+            <div class="col-lg-6 pb-5 pb-lg-0" data-aos="fade-right">
+                <div class="d-inline-flex align-items-center gap-2 px-3 py-2 rounded-pill mb-4" style="background: rgba(37, 99, 235, 0.1);">
+                    <span class="badge bg-primary rounded-pill">NEW</span>
+                    <span class="small fw-semibold text-primary">Discover your path abroad</span>
+                </div>
+                
+                <h1 class="display-4 hero-title mb-3">
                     STUDY OR WORK ABROAD<br>
-                    <span style="color: #10B981 !important;">BUILD YOUR GLOBAL FUTURE</span>
+                    <span class="hero-title-gradient">BUILD YOUR GLOBAL FUTURE</span>
                 </h1>
-                <p class="lead text-secondary mb-5" data-aos="fade-up" data-aos-delay="100" style="font-weight: 400; font-size: 1.2rem; max-width: 600px;">
+                <p class="lead text-secondary mb-5" style="font-weight: 400; font-size: 1.15rem; max-width: 550px;">
                     Explore top universities, courses, scholarships and international job opportunities. We make your dream of studying or working abroad a reality.
                 </p>
                 
-                <div class="row g-4" data-aos="fade-up" data-aos-delay="200">
+                <div class="row g-4 mb-4">
                     <!-- Study Card -->
                     <div class="col-md-6">
-                        <div class="card border-0 shadow-lg text-white h-100 hero-cta-card" style="background-color: #1E3A8A; border-radius: 16px;">
-                            <div class="card-body p-4 d-flex align-items-start gap-3">
-                                <i class="fas fa-graduation-cap fs-1 opacity-75"></i>
-                                <div>
-                                    <h4 class="fw-bold mb-2">Study Abroad</h4>
-                                    <p class="small mb-4 opacity-75">Find universities, courses, scholarships and more.</p>
-                                    <a href="/universities" class="btn btn-light rounded-pill px-4 fw-bold text-primary">Explore Now <i class="fas fa-arrow-right ms-2"></i></a>
+                        <div class="card border-0 shadow-sm text-white h-100 hero-cta-card" style="background: linear-gradient(135deg, #1e3a8a, #3b82f6); border-radius: 16px;">
+                            <div class="card-body p-4 text-center">
+                                <div class="bg-white text-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3 shadow-sm" style="width: 50px; height: 50px;">
+                                    <i class="fas fa-graduation-cap fs-4"></i>
                                 </div>
+                                <h5 class="fw-bold mb-2">Study Abroad</h5>
+                                <p class="small mb-3 opacity-75">Find universities & scholarships.</p>
+                                <a href="/universities" class="btn btn-light rounded-pill px-4 fw-bold text-primary btn-sm w-100">Explore Now</a>
                             </div>
                         </div>
                     </div>
                     <!-- Jobs Card -->
                     <div class="col-md-6">
-                        <div class="card border-0 shadow-lg text-white h-100 hero-cta-card" style="background-color: #10B981; border-radius: 16px;">
-                            <div class="card-body p-4 d-flex align-items-start gap-3">
-                                <i class="fas fa-briefcase fs-1 opacity-75"></i>
-                                <div>
-                                    <h4 class="fw-bold mb-2">Jobs Abroad</h4>
-                                    <p class="small mb-4 opacity-75">Discover global jobs, build your career and grow internationally.</p>
-                                    <a href="/jobs" class="btn btn-light rounded-pill px-4 fw-bold text-success">Explore Now <i class="fas fa-arrow-right ms-2"></i></a>
+                        <div class="card border-0 shadow-sm text-white h-100 hero-cta-card" style="background: linear-gradient(135deg, #059669, #10b981); border-radius: 16px;">
+                            <div class="card-body p-4 text-center">
+                                <div class="bg-white text-success rounded-circle d-inline-flex align-items-center justify-content-center mb-3 shadow-sm" style="width: 50px; height: 50px;">
+                                    <i class="fas fa-briefcase fs-4"></i>
                                 </div>
+                                <h5 class="fw-bold mb-2">Jobs Abroad</h5>
+                                <p class="small mb-3 opacity-75">Discover global careers.</p>
+                                <a href="/jobs" class="btn btn-light rounded-pill px-4 fw-bold text-success btn-sm w-100">Explore Now</a>
                             </div>
                         </div>
                     </div>
                 </div>
+
+                <!-- Trust Badges -->
+                <div class="d-flex align-items-center gap-3 pt-2">
+                    <div class="trust-avatars d-flex">
+                        <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=64&q=80" alt="Student">
+                        <img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=64&q=80" alt="Professional">
+                        <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=64&q=80" alt="Student">
+                        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=64&q=80" alt="Professional">
+                    </div>
+                    <div>
+                        <div class="d-flex text-warning fs-6 mb-1">
+                            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                        </div>
+                        <p class="small text-muted mb-0 fw-medium">Joined by <strong>50,000+</strong> users globally</p>
+                    </div>
+                </div>
             </div>
 
-            <!-- Right Side: Image Carousel -->
-            <div class="col-lg-5 d-none d-lg-block" data-aos="fade-left" data-aos-delay="300">
-                <div id="heroCarousel" class="carousel slide carousel-fade shadow-lg" data-bs-ride="carousel" style="border-radius: 20px; overflow: hidden; border: 8px solid white;">
-                    <div class="carousel-inner" style="height: 500px;">
-                        <div class="carousel-item active h-100">
-                            <img src="https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=800&q=80" class="d-block w-100 h-100 object-fit-cover" alt="Oxford University">
-                            <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 rounded p-2 mb-2">
-                                <h5 class="mb-0 fw-bold">Top Global Universities</h5>
-                            </div>
+            <!-- Right Side: Masonry Image Grid -->
+            <div class="col-lg-6 d-none d-lg-block ps-lg-5" data-aos="fade-left" data-aos-delay="200">
+                <div class="hero-masonry">
+                    <div class="floating-badge">
+                        <div class="bg-warning text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                            <i class="fas fa-plane"></i>
                         </div>
-                        <div class="carousel-item h-100">
-                            <img src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=800&q=80" class="d-block w-100 h-100 object-fit-cover" alt="Students">
-                            <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 rounded p-2 mb-2">
-                                <h5 class="mb-0 fw-bold">Vibrant Campus Life</h5>
-                            </div>
-                        </div>
-                        <div class="carousel-item h-100">
-                            <img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80" class="d-block w-100 h-100 object-fit-cover" alt="Corporate Jobs">
-                            <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 rounded p-2 mb-2">
-                                <h5 class="mb-0 fw-bold">International Careers</h5>
-                            </div>
-                        </div>
-                        <div class="carousel-item h-100">
-                            <img src="https://images.unsplash.com/photo-1506784365847-bbad939e9335?auto=format&fit=crop&w=800&q=80" class="d-block w-100 h-100 object-fit-cover" alt="Graduation">
-                            <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 rounded p-2 mb-2">
-                                <h5 class="mb-0 fw-bold">Build Your Future</h5>
-                            </div>
+                        <div>
+                            <div class="fw-bold text-dark" style="font-size: 0.9rem; line-height: 1.2;">30+ Countries</div>
+                            <div class="text-muted" style="font-size: 0.75rem;">Explore Now</div>
                         </div>
                     </div>
-                    <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
-                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                        <span class="visually-hidden">Previous</span>
-                    </button>
-                    <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
-                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                        <span class="visually-hidden">Next</span>
-                    </button>
+                    
+                    <img src="https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=800&q=80" class="masonry-img-1" alt="Top Global Universities">
+                    <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80" class="masonry-img-2" alt="Corporate Professionals">
+                    <img src="https://images.unsplash.com/photo-1520986606214-8b456906c813?auto=format&fit=crop&w=400&q=80" class="masonry-img-3" alt="Global Landmark">
                 </div>
             </div>
         </div>
     </div>
 </section>
+
 
 <!-- Floating Search Section -->
 <section class="position-relative" style="margin-top: -60px; z-index: 10;">

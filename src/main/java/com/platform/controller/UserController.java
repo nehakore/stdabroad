@@ -16,6 +16,12 @@ public class UserController {
     @Autowired
     private ApplicationService applicationService;
 
+    @Autowired
+    private com.platform.repository.ScholarshipRepository scholarshipRepository;
+
+    @Autowired
+    private com.platform.repository.CountryRepository countryRepository;
+
     @GetMapping("/dashboard")
     public String dashboard(HttpSession session, Model model) {
         User user = (User) session.getAttribute("loggedInUser");
@@ -23,8 +29,12 @@ public class UserController {
             return "redirect:/login";
         }
         model.addAttribute("applications", applicationService.getApplicationsByUser(user.getId()));
+        model.addAttribute("universities", universityRepository.findAll());
+        model.addAttribute("scholarships", scholarshipRepository.findAll());
+        model.addAttribute("countries", countryRepository.findAll());
         return "user/dashboard";
     }
+
 
     @Autowired
     private com.platform.repository.UniversityRepository universityRepository;

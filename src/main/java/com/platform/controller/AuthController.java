@@ -82,6 +82,10 @@ public class AuthController {
             if (user != null) {
                 session.setAttribute("loggedInUser", user);
                 session.setAttribute("role", user.getRole() != null ? user.getRole().toString() : "USER");
+                
+                if (com.platform.model.Role.JOB_SEEKER.equals(user.getRole())) {
+                    return "redirect:/jobseeker/dashboard";
+                }
                 return "redirect:/user/dashboard";
             }
         } else if ("PROVIDER".equals(role)) {
