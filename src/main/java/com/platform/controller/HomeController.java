@@ -110,4 +110,9 @@ public class HomeController {
         enquiryService.saveEnquiry(enquiry);
         return "redirect:/?enquirySuccess=true";
     }
+
+    @GetMapping("/contact")
+    public String contactPage(Model model) {
+        return "user/contact";
+    }
 }
