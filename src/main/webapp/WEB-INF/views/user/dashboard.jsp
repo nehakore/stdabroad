@@ -327,6 +327,93 @@
         @media (max-width: 480px) {
             .stat-grid { grid-template-columns: 1fr 1fr; }
         }
+
+        /* Custom University Details Modal */
+        .custom-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .custom-modal.show {
+            display: flex;
+            opacity: 1;
+        }
+        .custom-modal-content {
+            background: #fff;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            animation: modalSlideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+        }
+        @keyframes modalSlideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .custom-modal-header {
+            position: relative;
+            height: 200px;
+            display: flex;
+            align-items: flex-end;
+            padding: 24px;
+            color: #fff;
+        }
+        .custom-modal-header-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(180deg, rgba(15,23,42,0.1) 0%, rgba(15,23,42,0.85) 100%);
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
+        }
+        .custom-modal-header-text {
+            position: relative;
+            z-index: 2;
+        }
+        .custom-modal-close {
+            position: absolute;
+            top: 16px; right: 16px;
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: #fff;
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            z-index: 10;
+        }
+        .custom-modal-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+        .custom-modal-body {
+            padding: 28px;
+        }
+        .facility-chip {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            color: #334155;
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-size: 0.82rem;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
     </style>
 </head>
 <body>
@@ -385,14 +472,8 @@
         <button class="sd-nav-link" onclick="showPanel('search-universities', this)">
             <i class="fas fa-search"></i> Search Universities
         </button>
-        <button class="sd-nav-link" onclick="showPanel('browse-courses', this)">
-            <i class="fas fa-book-open"></i> Browse Courses
-        </button>
         <button class="sd-nav-link" onclick="showPanel('saved-universities', this)">
             <i class="fas fa-university"></i> Saved Universities
-        </button>
-        <button class="sd-nav-link" onclick="showPanel('saved-courses', this)">
-            <i class="fas fa-bookmark"></i> Saved Courses
         </button>
 
         <!-- Applications -->
@@ -421,9 +502,14 @@
 
         <!-- Support -->
         <div class="sd-nav-label">Support</div>
+        <button class="sd-nav-link" onclick="showPanel('enquiries', this)">
+            <i class="fas fa-question-circle"></i> My Enquiries
+        </button>
         <button class="sd-nav-link" onclick="showPanel('notifications', this)">
             <i class="fas fa-bell"></i> Notifications
-            <span class="sd-badge">3</span>
+            <c:if test="${not empty unreadNotificationsCount && unreadNotificationsCount > 0}">
+                <span class="sd-badge">${unreadNotificationsCount}</span>
+            </c:if>
         </button>
         <button class="sd-nav-link" onclick="showPanel('help-center', this)">
             <i class="fas fa-life-ring"></i> Help Center
@@ -457,7 +543,9 @@
         <div class="sd-topbar-actions">
             <button class="sd-notif-btn" onclick="showPanel('notifications', document.querySelector('[onclick*=notifications]'))">
                 <i class="fas fa-bell"></i>
-                <span class="sd-notif-dot"></span>
+                <c:if test="${not empty unreadNotificationsCount && unreadNotificationsCount > 0}">
+                    <span class="sd-notif-dot"></span>
+                </c:if>
             </button>
             <a href="/user/dashboard" style="text-decoration:none;">
                 <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:0.9rem;">
@@ -469,9 +557,55 @@
 
     <!-- ══ CONTENT PANELS ══ -->
     <div class="sd-content">
+        <!-- Alert Messages -->
+        <div id="dashboardAlerts">
+            <c:if test="${not empty successMsg}">
+                <div style="background: #dcfce7; border: 1px solid #bbf7d0; color: #15803d; padding: 12px 16px; border-radius: 12px; margin-bottom: 20px; font-size: 0.9rem; display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-check-circle"></i>
+                    <span>${successMsg}</span>
+                </div>
+            </c:if>
+            <c:if test="${not empty errorMsg}">
+                <div style="background: #fee2e2; border: 1px solid #fecaca; color: #b91c1c; padding: 12px 16px; border-radius: 12px; margin-bottom: 20px; font-size: 0.9rem; display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span>${errorMsg}</span>
+                </div>
+            </c:if>
+        </div>
 
         <!-- ─── OVERVIEW ─── -->
         <div class="sd-panel active" id="panel-overview">
+            <!-- Welcome Banner -->
+            <div style="background: linear-gradient(135deg, #4f46e5, #7c3aed); color: #ffffff; padding: 24px; border-radius: 16px; margin-bottom: 22px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.2);">
+                <div>
+                    <h3 style="font-weight: 700; margin-bottom: 6px; color:#ffffff;">Welcome Back, ${sessionScope.loggedInUser.name}!</h3>
+                    <p style="margin-bottom: 0; opacity: 0.9; font-size: 0.9rem;">Great progress! Let's continue matching you with top universities and programs.</p>
+                </div>
+                <div style="text-align: right; min-width: 180px;">
+                    <div style="font-weight: 600; font-size: 0.88rem; margin-bottom: 8px;">Profile Completion: ${profileCompletion}%</div>
+                    <div style="width: 100%; height: 8px; background: rgba(255, 255, 255, 0.2); border-radius: 4px; overflow: hidden; margin-bottom: 8px;">
+                        <div style="width: ${profileCompletion}%; height: 100%; background: #ffffff; border-radius: 4px; transition: width 0.6s;"></div>
+                    </div>
+                    <c:set var="isPersonalIncomplete" value="${empty sessionScope.loggedInUser.phone or empty sessionScope.loggedInUser.countryInterest or empty sessionScope.loggedInUser.courseInterest or empty sessionScope.loggedInUser.budget}" />
+                    <c:set var="isAcademicIncomplete" value="${empty studentProfile or empty studentProfile.qualification or empty studentProfile.fieldOfStudy or empty studentProfile.gradYear or empty studentProfile.gpa or empty studentProfile.englishScore}" />
+                    <c:set var="isResumeIncomplete" value="${empty sessionScope.loggedInUser.resumeUrl}" />
+                    <c:choose>
+                        <c:when test="${isPersonalIncomplete}">
+                            <a href="javascript:void(0)" onclick="showPanel('my-profile', document.querySelector('[onclick*=my-profile]'))" style="color: #ffffff; font-size: 0.78rem; text-decoration: underline; font-weight: 500;"><i class="fas fa-arrow-right me-1"></i>Next: Complete Profile Info</a>
+                        </c:when>
+                        <c:when test="${isAcademicIncomplete}">
+                            <a href="javascript:void(0)" onclick="showPanel('education', document.querySelector('[onclick*=education]'))" style="color: #ffffff; font-size: 0.78rem; text-decoration: underline; font-weight: 500;"><i class="fas fa-arrow-right me-1"></i>Next: Complete Education Details</a>
+                        </c:when>
+                        <c:when test="${isResumeIncomplete}">
+                            <a href="javascript:void(0)" onclick="showPanel('documents', document.querySelector('[onclick*=documents]'))" style="color: #ffffff; font-size: 0.78rem; text-decoration: underline; font-weight: 500;"><i class="fas fa-arrow-right me-1"></i>Next: Upload Resume</a>
+                        </c:when>
+                        <c:otherwise>
+                            <span style="color: #dcfce7; font-size: 0.78rem; font-weight: 600;"><i class="fas fa-check-circle me-1"></i>Profile Complete!</span>
+                        </c:otherwise>
+                    </c:choose>
+                </div>
+            </div>
+
             <!-- Stat Cards -->
             <div class="stat-grid">
                 <div class="stat-card" onclick="showPanel('saved-universities', document.querySelector('[onclick*=saved-universities]'))">
@@ -479,7 +613,7 @@
                         <i class="fas fa-university" style="color:#3b82f6;"></i>
                     </div>
                     <div>
-                        <div class="stat-num">0</div>
+                        <div class="stat-num">${savedUniversitiesCount}</div>
                         <div class="stat-lbl">Saved Universities</div>
                     </div>
                 </div>
@@ -488,7 +622,7 @@
                         <i class="fas fa-book-open" style="color:#16a34a;"></i>
                     </div>
                     <div>
-                        <div class="stat-num">0</div>
+                        <div class="stat-num">${savedCoursesCount}</div>
                         <div class="stat-lbl">Saved Courses</div>
                     </div>
                 </div>
@@ -561,7 +695,7 @@
                             <div class="empty-state">
                                 <i class="fas fa-file-alt"></i>
                                 <p>No applications yet.</p>
-                                <button class="btn-sd-primary" onclick="showPanel('search-universities', document.querySelector('[onclick*=search-universities]'))">Explore Universities</button>
+                                <button class="btn-sd-primary" onclick="window.location.href='/universities'">Explore Universities</button>
                             </div>
                         </c:otherwise>
                     </c:choose>
@@ -571,16 +705,16 @@
                 <div class="sd-card">
                     <div class="sd-card-title"><i class="fas fa-bolt"></i> Quick Actions</div>
                     <div style="display:flex;flex-direction:column;gap:10px;">
-                        <button class="btn-sd-primary" style="width:100%;display:flex;align-items:center;gap:10px;" onclick="showPanel('search-universities', document.querySelector('[onclick*=search-universities]'))">
+                        <button class="btn-sd-primary" style="width:100%;display:flex;align-items:center;gap:10px;" onclick="window.location.href='/universities'">
                             <i class="fas fa-search"></i> Search Universities
                         </button>
-                        <button class="btn-sd-outline" style="width:100%;display:flex;align-items:center;gap:10px;" onclick="showPanel('browse-courses', document.querySelector('[onclick*=browse-courses]'))">
+                        <button class="btn-sd-outline" style="width:100%;display:flex;align-items:center;gap:10px;" onclick="window.location.href='/courses'">
                             <i class="fas fa-book-open"></i> Browse Courses
                         </button>
-                        <button class="btn-sd-outline" style="width:100%;display:flex;align-items:center;gap:10px;" onclick="showPanel('schol-recommendations', document.querySelector('[onclick*=schol-recommendations]'))">
+                        <button class="btn-sd-outline" style="width:100%;display:flex;align-items:center;gap:10px;" onclick="window.location.href='/scholarships'">
                             <i class="fas fa-star"></i> View Scholarships
                         </button>
-                        <button class="btn-sd-outline" style="width:100%;display:flex;align-items:center;gap:10px;" onclick="showPanel('my-profile', document.querySelector('[onclick*=my-profile]'))">
+                        <button class="btn-sd-outline" style="width:100%;display:flex;align-items:center;gap:10px;" onclick="window.location.href='/user/dashboard?panel=my-profile'">
                             <i class="fas fa-user-edit"></i> Update Profile
                         </button>
                     </div>
@@ -618,7 +752,7 @@
                                 </tr>
                             </c:forEach>
                             <c:if test="${empty applications}">
-                                <tr><td colspan="5" class="text-center py-4" style="color:#94a3b8;">No applications yet. <button class="btn-sd-primary" style="margin-left:8px;padding:5px 14px;font-size:0.78rem;" onclick="showPanel('search-universities', document.querySelector('[onclick*=search-universities]'))">Start Exploring</button></td></tr>
+                                <tr><td colspan="5" class="text-center py-4" style="color:#94a3b8;">No applications yet. <button class="btn-sd-primary" style="margin-left:8px;padding:5px 14px;font-size:0.78rem;" onclick="window.location.href='/universities'">Start Exploring</button></td></tr>
                             </c:if>
                         </tbody>
                     </table>
@@ -684,33 +818,33 @@
                         <div class="form-group">
                             <label class="form-label-sd">Highest Qualification</label>
                             <select class="form-input" name="qualification">
-                                <option>10th / High School</option>
-                                <option>12th / Higher Secondary</option>
-                                <option>Diploma</option>
-                                <option>Bachelor's Degree</option>
-                                <option>Master's Degree</option>
-                                <option>PhD</option>
+                                <option ${studentProfile.qualification == '10th / High School' ? 'selected' : ''}>10th / High School</option>
+                                <option ${studentProfile.qualification == '12th / Higher Secondary' ? 'selected' : ''}>12th / Higher Secondary</option>
+                                <option ${studentProfile.qualification == 'Diploma' ? 'selected' : ''}>Diploma</option>
+                                <option ${studentProfile.qualification == "Bachelor's Degree" ? 'selected' : ''}>Bachelor's Degree</option>
+                                <option ${studentProfile.qualification == "Master's Degree" ? 'selected' : ''}>Master's Degree</option>
+                                <option ${studentProfile.qualification == 'PhD' ? 'selected' : ''}>PhD</option>
                             </select>
                         </div>
                         <div class="form-group">
                             <label class="form-label-sd">Field of Study</label>
-                            <input type="text" name="fieldOfStudy" class="form-input" value="${sessionScope.loggedInUser.courseInterest}" placeholder="e.g. Computer Science">
+                            <input type="text" name="fieldOfStudy" class="form-input" value="${not empty studentProfile.fieldOfStudy ? studentProfile.fieldOfStudy : sessionScope.loggedInUser.courseInterest}" placeholder="e.g. Computer Science">
                         </div>
                         <div class="form-group">
                             <label class="form-label-sd">Graduation Year</label>
-                            <input type="text" name="gradYear" class="form-input" placeholder="e.g. 2024">
+                            <input type="text" name="gradYear" class="form-input" value="${studentProfile.gradYear}" placeholder="e.g. 2024">
                         </div>
                         <div class="form-group">
                             <label class="form-label-sd">GPA / Percentage</label>
-                            <input type="text" name="gpa" class="form-input" placeholder="e.g. 3.8 / 85%">
+                            <input type="text" name="gpa" class="form-input" value="${studentProfile.gpa}" placeholder="e.g. 3.8 / 85%">
                         </div>
                         <div class="form-group">
                             <label class="form-label-sd">English Test Score</label>
-                            <input type="text" name="englishScore" class="form-input" placeholder="e.g. IELTS 7.0 / TOEFL 100">
+                            <input type="text" name="englishScore" class="form-input" value="${studentProfile.englishScore}" placeholder="e.g. IELTS 7.0 / TOEFL 100">
                         </div>
                         <div class="form-group">
                             <label class="form-label-sd">Skills</label>
-                            <input type="text" name="skills" class="form-input" value="${sessionScope.loggedInUser.skills}" placeholder="e.g. Python, Communication">
+                            <input type="text" name="skills" class="form-input" value="${not empty studentProfile.skills ? studentProfile.skills : sessionScope.loggedInUser.skills}" placeholder="e.g. Python, Communication">
                         </div>
                     </div>
                     <div style="text-align:right;margin-top:8px;">
@@ -727,28 +861,61 @@
                 <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;">
                     <c:set var="docs" value="${['Passport','10th Marksheet','12th Marksheet','Degree Certificate','IELTS / TOEFL Score','Resume / CV','Statement of Purpose','Recommendation Letter','Police Clearance']}"/>
                     <c:forEach var="doc" items="${docs}">
-                        <div style="border:2px dashed #e2e8f0;border-radius:12px;padding:18px;text-align:center;transition:border-color 0.2s;"
-                             onmouseover="this.style.borderColor='#6366f1'" onmouseout="this.style.borderColor='#e2e8f0'">
-                            <i class="fas fa-file-upload" style="font-size:1.6rem;color:#cbd5e1;margin-bottom:10px;display:block;"></i>
-                            <div style="font-size:0.82rem;font-weight:600;color:#334155;margin-bottom:8px;">${doc}</div>
-                            <label style="cursor:pointer;">
-                                <span style="font-size:0.75rem;background:#ede9fe;color:#6d28d9;padding:4px 12px;border-radius:20px;font-weight:600;">
-                                    <i class="fas fa-plus me-1"></i>Upload
-                                </span>
-                                <input type="file" style="display:none;">
-                            </label>
-                        </div>
+                        <c:choose>
+                            <c:when test="${doc == 'Resume / CV'}">
+                                <c:choose>
+                                    <c:when test="${not empty sessionScope.loggedInUser.resumeUrl}">
+                                        <div style="border:2px solid #dcfce7;border-radius:12px;padding:18px;text-align:center;background:#f0fdf4;">
+                                            <i class="fas fa-file-pdf" style="font-size:1.6rem;color:#16a34a;margin-bottom:10px;display:block;"></i>
+                                            <div style="font-size:0.82rem;font-weight:600;color:#334155;margin-bottom:8px;">Resume / CV (Uploaded)</div>
+                                            <div style="display:flex; justify-content:center; gap:8px;">
+                                                <a href="${sessionScope.loggedInUser.resumeUrl}" target="_blank"
+                                                   style="font-size:0.75rem;background:#dcfce7;color:#15803d;padding:4px 12px;border-radius:20px;font-weight:600;text-decoration:none;">
+                                                    <i class="fas fa-eye me-1"></i>View
+                                                </a>
+                                                <form action="/user/upload-resume" method="POST" enctype="multipart/form-data" id="reuploadResumeForm" style="display:inline;">
+                                                    <label style="cursor:pointer;">
+                                                        <span style="font-size:0.75rem;background:#ede9fe;color:#6d28d9;padding:4px 12px;border-radius:20px;font-weight:600;">
+                                                            <i class="fas fa-redo me-1"></i>Update
+                                                        </span>
+                                                        <input type="file" name="resume" style="display:none;" onchange="document.getElementById('reuploadResumeForm').submit();">
+                                                    </label>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <div style="border:2px dashed #e2e8f0;border-radius:12px;padding:18px;text-align:center;transition:border-color 0.2s;"
+                                             onmouseover="this.style.borderColor='#6366f1'" onmouseout="this.style.borderColor='#e2e8f0'">
+                                            <i class="fas fa-file-upload" style="font-size:1.6rem;color:#cbd5e1;margin-bottom:10px;display:block;"></i>
+                                            <div style="font-size:0.82rem;font-weight:600;color:#334155;margin-bottom:8px;">Resume / CV</div>
+                                            <form action="/user/upload-resume" method="POST" enctype="multipart/form-data" id="resumeForm">
+                                                <label style="cursor:pointer;">
+                                                    <span style="font-size:0.75rem;background:#ede9fe;color:#6d28d9;padding:4px 12px;border-radius:20px;font-weight:600;">
+                                                        <i class="fas fa-plus me-1"></i>Upload
+                                                    </span>
+                                                    <input type="file" name="resume" style="display:none;" onchange="document.getElementById('resumeForm').submit();">
+                                                </label>
+                                            </form>
+                                        </div>
+                                    </c:otherwise>
+                                </c:choose>
+                            </c:when>
+                            <c:otherwise>
+                                <div style="border:2px dashed #e2e8f0;border-radius:12px;padding:18px;text-align:center;transition:border-color 0.2s;"
+                                     onmouseover="this.style.borderColor='#6366f1'" onmouseout="this.style.borderColor='#e2e8f0'">
+                                    <i class="fas fa-file-upload" style="font-size:1.6rem;color:#cbd5e1;margin-bottom:10px;display:block;"></i>
+                                    <div style="font-size:0.82rem;font-weight:600;color:#334155;margin-bottom:8px;">${doc}</div>
+                                    <label style="cursor:pointer;">
+                                        <span style="font-size:0.75rem;background:#ede9fe;color:#6d28d9;padding:4px 12px;border-radius:20px;font-weight:600;">
+                                            <i class="fas fa-plus me-1"></i>Upload
+                                        </span>
+                                        <input type="file" style="display:none;">
+                                    </label>
+                                </div>
+                            </c:otherwise>
+                        </c:choose>
                     </c:forEach>
-                    <c:if test="${not empty sessionScope.loggedInUser.resumeUrl}">
-                        <div style="border:2px solid #dcfce7;border-radius:12px;padding:18px;text-align:center;background:#f0fdf4;">
-                            <i class="fas fa-file-pdf" style="font-size:1.6rem;color:#16a34a;margin-bottom:10px;display:block;"></i>
-                            <div style="font-size:0.82rem;font-weight:600;color:#334155;margin-bottom:8px;">Resume / CV</div>
-                            <a href="${sessionScope.loggedInUser.resumeUrl}" target="_blank"
-                               style="font-size:0.75rem;background:#dcfce7;color:#15803d;padding:4px 12px;border-radius:20px;font-weight:600;text-decoration:none;">
-                                <i class="fas fa-eye me-1"></i>View
-                            </a>
-                        </div>
-                    </c:if>
                 </div>
             </div>
         </div>
@@ -773,9 +940,11 @@
                     <div style="padding:18px;background:#fef2f2;border-radius:12px;border:1px solid #fecaca;">
                         <div style="font-weight:700;color:#b91c1c;margin-bottom:4px;">Delete Account</div>
                         <div style="font-size:0.82rem;color:#64748b;margin-bottom:14px;">This action is irreversible. All your data will be permanently deleted.</div>
-                        <button class="btn-sd-outline" style="color:#dc2626;border-color:#fca5a5;" onclick="return confirm('Are you sure? This cannot be undone.')">
-                            <i class="fas fa-trash me-2"></i>Delete My Account
-                        </button>
+                        <form action="/user/delete-account" method="POST">
+                            <button type="submit" class="btn-sd-outline" style="color:#dc2626;border-color:#fca5a5;" onclick="return confirm('Are you sure? This cannot be undone.')">
+                                <i class="fas fa-trash me-2"></i>Delete My Account
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -800,7 +969,35 @@
                 <c:choose>
                     <c:when test="${not empty universities}">
                         <c:forEach var="uni" items="${universities}">
-                            <div class="item-card uni-item" data-name="${uni.name}" data-country="${not empty uni.country ? uni.country.name : ''}">
+                            <div class="item-card uni-item" 
+                                 data-id="${uni.id}"
+                                 data-name="${uni.name}"
+                                 data-city="${uni.city}"
+                                 data-country="${not empty uni.country ? uni.country.name : ''}"
+                                 data-description="<c:out value='${uni.description}'/>"
+                                 data-type="${uni.type}"
+                                 data-established="${uni.establishedYear}"
+                                 data-accreditation="${uni.accreditation}"
+                                 data-website="${uni.website}"
+                                 data-fees="${uni.fees}"
+                                 data-ranking="${uni.ranking}"
+                                 data-placement="${uni.placementPercentage}"
+                                 data-image="${uni.imageUrl}"
+                                 data-banner="${uni.bannerImage}"
+                                 data-docs="<c:out value='${uni.requiredDocuments}'/>"
+                                 data-recruiters="<c:out value='${uni.topRecruiters}'/>"
+                                 data-contact-name="${uni.admissionContact}"
+                                 data-contact-email="${uni.email}"
+                                 data-contact-phone="${uni.phone}"
+                                 data-contact-whatsapp="${uni.whatsapp}"
+                                 data-has-hostel="${uni.hasHostel}"
+                                 data-has-library="${uni.hasLibrary}"
+                                 data-has-sports="${uni.hasSports}"
+                                 data-has-placement="${uni.hasPlacementSupport}"
+                                 data-has-transport="${uni.hasTransport}"
+                                 data-has-wifi="${uni.hasWifi}"
+                                 data-has-labs="${uni.hasLabs}"
+                                 data-has-cafeteria="${uni.hasCafeteria}">
                                 <div class="item-card-img" style="background:${uni.bannerImage != null ? 'url('.concat(uni.bannerImage).concat(') center/cover no-repeat') : 'linear-gradient(135deg,#6366f1,#8b5cf6)'};">
                                     <c:if test="${empty uni.bannerImage}"><i class="fas fa-university"></i></c:if>
                                 </div>
@@ -811,7 +1008,12 @@
                                         <c:if test="${not empty uni.ranking}"><span class="sd-badge-pill badge-review" style="font-size:0.7rem;">#${uni.ranking} Ranked</span></c:if>
                                         <c:if test="${uni.hasVisaAssistance}"><span class="sd-badge-pill badge-accepted" style="font-size:0.7rem;">Visa Help</span></c:if>
                                     </div>
-                                    <a href="/user/enquire-uni?id=${uni.id}" style="display:block;margin-top:10px;text-align:center;" class="btn-sd-primary" style="font-size:0.8rem;padding:7px 14px;">Enquire Now</a>
+                                    <div style="margin-top:10px;display:flex;gap:6px;align-items:stretch;">
+                                        <a href="/user/enquire-uni?id=${uni.id}" class="btn-sd-primary" style="font-size:0.8rem;padding:7px 14px;text-align:center;flex:1;">Enquire Now</a>
+                                        <button class="btn btn-outline-primary btn-sm px-3" style="border-radius:8px;display:flex;align-items:center;font-size:0.8rem;font-weight:600;" onclick="viewUniversityDetails(this)">
+                                            <i class="fas fa-eye me-1"></i> View
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </c:forEach>
@@ -830,11 +1032,50 @@
         <div class="sd-panel" id="panel-browse-courses">
             <div class="sd-card">
                 <div class="sd-card-title"><i class="fas fa-book-open"></i> Browse Courses</div>
-                <div class="empty-state">
-                    <i class="fas fa-book-open"></i>
-                    <p>Course browsing is coming soon.</p>
-                    <a href="/universities" class="btn-sd-primary">Browse Universities Instead</a>
-                </div>
+                <c:choose>
+                    <c:when test="${not empty courses}">
+                        <div class="item-grid">
+                            <c:forEach var="course" items="${courses}">
+                                <div class="item-card course-item" style="border: 1px solid #f1f5f9; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between;">
+                                    <div>
+                                        <span class="sd-badge-pill badge-course" style="font-size:0.7rem; margin-bottom:8px; display:inline-block;">${course.degreeType}</span>
+                                        <div class="item-card-title" style="font-size:1rem; font-weight:700; color:#0f172a; margin-bottom:4px;">${course.name}</div>
+                                        <div class="item-card-sub" style="font-size:0.82rem; color:#64748b; margin-bottom:8px;">
+                                            <i class="fas fa-university me-1"></i>${course.university.name}
+                                        </div>
+                                        <div style="font-size:0.8rem; color:#475569; margin-bottom:12px;">
+                                            Duration: ${course.duration} · Fees: $${course.fees}
+                                        </div>
+                                    </div>
+                                    <div style="display:flex; gap:6px;">
+                                        <a href="/user/enquire-uni?id=${course.university.id}" class="btn-sd-primary flex-grow-1" style="font-size:0.8rem; padding:7px 14px; text-align:center;">Enquire Now</a>
+                                        
+                                        <c:set var="isCourseSaved" value="false" />
+                                        <c:forEach var="sc" items="${savedCourses}">
+                                            <c:if test="${sc.course.id == course.id}">
+                                                <c:set var="isCourseSaved" value="true" />
+                                            </c:if>
+                                        </c:forEach>
+                                        <c:choose>
+                                            <c:when test="${isCourseSaved}">
+                                                <a href="/user/unsave-course?id=${course.id}" class="btn btn-danger btn-sm px-3" style="border-radius:8px; display:flex; align-items:center;" title="Unsave Course"><i class="fas fa-bookmark"></i></a>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <a href="/user/save-course?id=${course.id}" class="btn btn-outline-primary btn-sm px-3" style="border-radius:8px; display:flex; align-items:center;" title="Save Course"><i class="far fa-bookmark"></i></a>
+                                            </c:otherwise>
+                                        </c:choose>
+                                    </div>
+                                </div>
+                            </c:forEach>
+                        </div>
+                    </c:when>
+                    <c:otherwise>
+                        <div class="empty-state">
+                            <i class="fas fa-book-open"></i>
+                            <p>No courses available at the moment.</p>
+                        </div>
+                    </c:otherwise>
+                </c:choose>
             </div>
         </div>
 
@@ -842,13 +1083,72 @@
         <div class="sd-panel" id="panel-saved-universities">
             <div class="sd-card">
                 <div class="sd-card-title"><i class="fas fa-university"></i> Saved Universities</div>
-                <div class="empty-state">
-                    <i class="fas fa-university"></i>
-                    <p>You haven't saved any universities yet.</p>
-                    <button class="btn-sd-primary" onclick="showPanel('search-universities', document.querySelector('[onclick*=search-universities]'))">
-                        Search Universities
-                    </button>
-                </div>
+                <c:choose>
+                    <c:when test="${not empty savedUniversities}">
+                        <div class="item-grid">
+                            <c:forEach var="saved" items="${savedUniversities}">
+                                <c:set var="uni" value="${saved.university}"/>
+                                <div class="item-card uni-item" 
+                                     data-id="${uni.id}"
+                                     data-name="${uni.name}"
+                                     data-city="${uni.city}"
+                                     data-country="${not empty uni.country ? uni.country.name : ''}"
+                                     data-description="<c:out value='${uni.description}'/>"
+                                     data-type="${uni.type}"
+                                     data-established="${uni.establishedYear}"
+                                     data-accreditation="${uni.accreditation}"
+                                     data-website="${uni.website}"
+                                     data-fees="${uni.fees}"
+                                     data-ranking="${uni.ranking}"
+                                     data-placement="${uni.placementPercentage}"
+                                     data-image="${uni.imageUrl}"
+                                     data-banner="${uni.bannerImage}"
+                                     data-docs="<c:out value='${uni.requiredDocuments}'/>"
+                                     data-recruiters="<c:out value='${uni.topRecruiters}'/>"
+                                     data-contact-name="${uni.admissionContact}"
+                                     data-contact-email="${uni.email}"
+                                     data-contact-phone="${uni.phone}"
+                                     data-contact-whatsapp="${uni.whatsapp}"
+                                     data-has-hostel="${uni.hasHostel}"
+                                     data-has-library="${uni.hasLibrary}"
+                                     data-has-sports="${uni.hasSports}"
+                                     data-has-placement="${uni.hasPlacementSupport}"
+                                     data-has-transport="${uni.hasTransport}"
+                                     data-has-wifi="${uni.hasWifi}"
+                                     data-has-labs="${uni.hasLabs}"
+                                     data-has-cafeteria="${uni.hasCafeteria}">
+                                    <div class="item-card-img" style="background:${uni.bannerImage != null ? 'url('.concat(uni.bannerImage).concat(') center/cover no-repeat') : 'linear-gradient(135deg,#6366f1,#8b5cf6)'};">
+                                        <c:if test="${empty uni.bannerImage}"><i class="fas fa-university"></i></c:if>
+                                    </div>
+                                    <div class="item-card-body">
+                                        <div class="item-card-title">${uni.name}</div>
+                                        <div class="item-card-sub"><i class="fas fa-map-marker-alt me-1"></i>${not empty uni.country ? uni.country.name : 'International'} <c:if test="${not empty uni.city}">· ${uni.city}</c:if></div>
+                                        <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">
+                                            <c:if test="${not empty uni.ranking}"><span class="sd-badge-pill badge-review" style="font-size:0.7rem;">#${uni.ranking} Ranked</span></c:if>
+                                            <c:if test="${uni.hasVisaAssistance}"><span class="sd-badge-pill badge-accepted" style="font-size:0.7rem;">Visa Help</span></c:if>
+                                        </div>
+                                        <div style="margin-top:10px;display:flex;gap:6px;align-items:stretch;">
+                                            <a href="/user/enquire-uni?id=${uni.id}" class="btn-sd-primary" style="font-size:0.8rem;padding:7px 14px;text-align:center;flex:1;">Enquire Now</a>
+                                            <button class="btn btn-outline-primary btn-sm px-3" style="border-radius:8px;display:flex;align-items:center;font-size:0.8rem;font-weight:600;" onclick="viewUniversityDetails(this)">
+                                                <i class="fas fa-eye me-1"></i> View
+                                            </button>
+                                            <a href="/user/unsave-university?id=${uni.id}" class="btn btn-outline-danger btn-sm px-3" style="border-radius:8px;display:flex;align-items:center;" title="Remove"><i class="fas fa-trash-alt"></i></a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </c:forEach>
+                        </div>
+                    </c:when>
+                    <c:otherwise>
+                        <div class="empty-state">
+                            <i class="fas fa-university"></i>
+                            <p>You haven't saved any universities yet.</p>
+                            <button class="btn-sd-primary" onclick="showPanel('search-universities', document.querySelector('[onclick*=search-universities]'))">
+                                Search Universities
+                            </button>
+                        </div>
+                    </c:otherwise>
+                </c:choose>
             </div>
         </div>
 
@@ -856,11 +1156,38 @@
         <div class="sd-panel" id="panel-saved-courses">
             <div class="sd-card">
                 <div class="sd-card-title"><i class="fas fa-bookmark"></i> Saved Courses</div>
-                <div class="empty-state">
-                    <i class="fas fa-bookmark"></i>
-                    <p>No saved courses yet.</p>
-                    <button class="btn-sd-primary" onclick="showPanel('browse-courses', document.querySelector('[onclick*=browse-courses]'))">Browse Courses</button>
-                </div>
+                <c:choose>
+                    <c:when test="${not empty savedCourses}">
+                        <div class="item-grid">
+                            <c:forEach var="saved" items="${savedCourses}">
+                                <c:set var="course" value="${saved.course}"/>
+                                <div class="item-card course-item" style="border: 1px solid #f1f5f9; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between;">
+                                    <div>
+                                        <span class="sd-badge-pill badge-course" style="font-size:0.7rem; margin-bottom:8px; display:inline-block;">${course.degreeType}</span>
+                                        <div class="item-card-title" style="font-size:1rem; font-weight:700; color:#0f172a; margin-bottom:4px;">${course.name}</div>
+                                        <div class="item-card-sub" style="font-size:0.82rem; color:#64748b; margin-bottom:8px;">
+                                            <i class="fas fa-university me-1"></i>${course.university.name}
+                                        </div>
+                                        <div style="font-size:0.8rem; color:#475569; margin-bottom:12px;">
+                                            Duration: ${course.duration} · Fees: $${course.fees}
+                                        </div>
+                                    </div>
+                                    <div style="display:flex; gap:6px;">
+                                        <a href="/user/enquire-uni?id=${course.university.id}" class="btn-sd-primary flex-grow-1" style="font-size:0.8rem; padding:7px 14px; text-align:center;">Enquire Now</a>
+                                        <a href="/user/unsave-course?id=${course.id}" class="btn btn-outline-danger btn-sm px-3" style="border-radius:8px; display:flex; align-items:center;" title="Remove"><i class="fas fa-trash-alt"></i></a>
+                                    </div>
+                                </div>
+                            </c:forEach>
+                        </div>
+                    </c:when>
+                    <c:otherwise>
+                        <div class="empty-state">
+                            <i class="fas fa-bookmark"></i>
+                            <p>No saved courses yet.</p>
+                            <button class="btn-sd-primary" onclick="showPanel('browse-courses', document.querySelector('[onclick*=browse-courses]'))">Browse Courses</button>
+                        </div>
+                    </c:otherwise>
+                </c:choose>
             </div>
         </div>
 
@@ -906,7 +1233,7 @@
                                 <tr><td colspan="6"><div class="empty-state">
                                     <i class="fas fa-inbox"></i>
                                     <p>You haven't applied to anything yet.</p>
-                                    <button class="btn-sd-primary" onclick="showPanel('search-universities', document.querySelector('[onclick*=search-universities]'))">Explore Universities</button>
+                                    <button class="btn-sd-primary" onclick="window.location.href='/universities'">Explore Universities</button>
                                 </div></td></tr>
                             </c:if>
                         </tbody>
@@ -1005,7 +1332,7 @@
                                 <div style="flex:1;">
                                     <div style="font-weight:700;color:#0f172a;margin-bottom:3px;">${s.name}</div>
                                     <div style="font-size:0.8rem;color:#64748b;margin-bottom:8px;">${not empty s.country ? s.country : 'International'} · ${not empty s.amount ? s.amount : 'Amount varies'}</div>
-                                    <div style="font-size:0.82rem;color:#334155;">${not empty s.description ? s.description.substring(0, [s.description.length(), 100].min()) : ''}</div>
+                                    <div style="font-size:0.82rem;color:#334155;">${not empty s.description ? (s.description.length() > 100 ? s.description.substring(0, 100).concat('...') : s.description) : ''}</div>
                                     <div style="margin-top:10px;display:flex;gap:8px;">
                                         <button class="btn-sd-primary" style="padding:6px 14px;font-size:0.78rem;">Apply Now</button>
                                         <button class="btn-sd-outline" style="padding:6px 14px;font-size:0.78rem;"><i class="fas fa-heart me-1"></i>Save</button>
@@ -1039,37 +1366,140 @@
             </div>
         </div>
 
+        <!-- ─── MY ENQUIRIES ─── -->
+        <div class="sd-panel" id="panel-enquiries">
+            <div class="sd-card">
+                <div class="sd-card-title"><i class="fas fa-question-circle"></i> My Enquiries</div>
+                
+                <c:choose>
+                    <c:when test="${not empty enquiries}">
+                        <div class="table-responsive">
+                            <table class="table sd-table mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Type</th>
+                                        <th>University</th>
+                                        <th>Message Preview</th>
+                                        <th>Status</th>
+                                        <th>Date Sent</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <c:forEach var="e" items="${enquiries}">
+                                        <tr style="cursor: pointer;" onclick="toggleEnquiryReply(${e.id})">
+                                            <td>
+                                                <c:choose>
+                                                    <c:when test="${e.type == 'Study'}"><span class="sd-badge-pill badge-course">Study</span></c:when>
+                                                    <c:when test="${e.type == 'Job'}"><span class="sd-badge-pill badge-job">Job</span></c:when>
+                                                    <c:otherwise><span class="sd-badge-pill badge-uni">General</span></c:otherwise>
+                                                </c:choose>
+                                            </td>
+                                            <td class="fw-semibold" style="color:#1e293b;">
+                                                <c:choose>
+                                                    <c:when test="${not empty e.university}">${e.university.name}</c:when>
+                                                    <c:otherwise><span class="text-muted">General (Admin)</span></c:otherwise>
+                                                </c:choose>
+                                            </td>
+                                            <td style="color:#64748b; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${e.message}</td>
+                                            <td>
+                                                <c:choose>
+                                                    <c:when test="${e.status == 'New' || e.status == 'PENDING'}">
+                                                        <span class="sd-badge-pill badge-pending">${e.status}</span>
+                                                    </c:when>
+                                                    <c:when test="${e.status == 'Replied'}">
+                                                        <span class="sd-badge-pill badge-accepted">Replied</span>
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        <span class="sd-badge-pill badge-review">${e.status}</span>
+                                                    </c:otherwise>
+                                                </c:choose>
+                                            </td>
+                                            <td style="color:#64748b;">
+                                                <c:if test="${not empty e.createdAt}">
+                                                    ${e.createdAt.toLocalDate()}
+                                                </c:if>
+                                            </td>
+                                            <td>
+                                                <button class="btn-sd-primary" style="padding: 4px 10px; font-size: 0.75rem; border-radius: 6px;" onclick="event.stopPropagation(); toggleEnquiryReply(${e.id});">
+                                                    <i class="fas fa-eye me-1"></i> View Details
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        <!-- Collapsible Details Row -->
+                                        <tr id="enquiry-details-${e.id}" style="display: none; background-color: #f8fafc;">
+                                            <td colspan="6" style="padding: 16px 20px;">
+                                                <div style="display: flex; flex-direction: column; gap: 12px; border-left: 3px solid #6366f1; padding-left: 15px;">
+                                                    <div>
+                                                        <span style="font-weight: 700; font-size: 0.8rem; color: #475569; text-transform: uppercase; display: block; margin-bottom: 4px;">Your Enquiry Message</span>
+                                                        <p style="font-size: 0.88rem; color: #1e293b; margin: 0; white-space: pre-wrap;">${e.message}</p>
+                                                    </div>
+                                                    
+                                                    <c:choose>
+                                                        <c:when test="${not empty e.reply}">
+                                                            <div style="background: #e0e7ff; border-radius: 8px; padding: 12px; margin-top: 4px; border: 1px solid #c7d2fe;">
+                                                                <span style="font-weight: 700; font-size: 0.8rem; color: #4338ca; text-transform: uppercase; display: block; margin-bottom: 4px;"><i class="fas fa-reply me-1"></i> Provider Reply</span>
+                                                                <p style="font-size: 0.88rem; color: #312e81; margin: 0; white-space: pre-wrap;">${e.reply}</p>
+                                                            </div>
+                                                        </c:when>
+                                                        <c:otherwise>
+                                                            <div style="background: #f1f5f9; border-radius: 8px; padding: 12px; margin-top: 4px; border: 1px dashed #cbd5e1; color: #64748b; font-size: 0.85rem;">
+                                                                <i class="fas fa-hourglass-half me-1"></i> Awaiting reply from provider...
+                                                            </div>
+                                                        </c:otherwise>
+                                                    </c:choose>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </c:forEach>
+                                </tbody>
+                            </table>
+                        </div>
+                    </c:when>
+                    <c:otherwise>
+                        <div class="empty-state">
+                            <i class="fas fa-question-circle"></i>
+                            <p>You haven't submitted any enquiries yet.</p>
+                            <a href="/enquiry" class="btn-sd-primary" style="text-decoration:none; display:inline-block; line-height:2.4;">Submit New Enquiry</a>
+                        </div>
+                    </c:otherwise>
+                </c:choose>
+            </div>
+        </div>
+
         <!-- ─── NOTIFICATIONS ─── -->
         <div class="sd-panel" id="panel-notifications">
             <div class="sd-card">
                 <div class="sd-card-title"><i class="fas fa-bell"></i> Notifications</div>
                 <div>
-                    <div class="notif-item">
-                        <div class="notif-dot-icon notif-unread"><i class="fas fa-file-alt"></i></div>
-                        <div style="flex:1;">
-                            <div style="font-weight:600;font-size:0.88rem;color:#1e293b;">Application Update</div>
-                            <div style="font-size:0.8rem;color:#64748b;margin-top:2px;">Your application has been received and is under review.</div>
-                            <div style="font-size:0.74rem;color:#94a3b8;margin-top:4px;"><i class="fas fa-clock me-1"></i>Just now</div>
+                    <c:forEach var="n" items="${notifications}">
+                        <div class="notif-item">
+                            <div class="notif-dot-icon ${n.read ? 'notif-read' : 'notif-unread'}">
+                                <c:choose>
+                                    <c:when test="${n.type == 'APPLICATION'}"><i class="fas fa-file-alt"></i></c:when>
+                                    <c:when test="${n.type == 'SCHOLARSHIP'}"><i class="fas fa-star"></i></c:when>
+                                    <c:when test="${n.type == 'ENQUIRY'}"><i class="fas fa-question-circle"></i></c:when>
+                                    <c:otherwise><i class="fas fa-university"></i></c:otherwise>
+                                </c:choose>
+                            </div>
+                            <div style="flex:1;">
+                                <div style="font-weight:600;font-size:0.88rem;color:#1e293b;">${n.title}</div>
+                                <div style="font-size:0.8rem;color:#64748b;margin-top:2px;">${n.message}</div>
+                                <div class="notif-time" data-date="${n.createdAt}" style="font-size:0.74rem;color:#94a3b8;margin-top:4px;">
+                                    <i class="fas fa-clock me-1"></i>Just now
+                                </div>
+                            </div>
+                            <c:if test="${!n.read}">
+                                <span class="sd-badge-pill badge-review" style="font-size:0.7rem;height:fit-content;">New</span>
+                            </c:if>
                         </div>
-                        <span class="sd-badge-pill badge-review" style="font-size:0.7rem;height:fit-content;">New</span>
-                    </div>
-                    <div class="notif-item">
-                        <div class="notif-dot-icon notif-unread"><i class="fas fa-star"></i></div>
-                        <div style="flex:1;">
-                            <div style="font-weight:600;font-size:0.88rem;color:#1e293b;">New Scholarship Available</div>
-                            <div style="font-size:0.8rem;color:#64748b;margin-top:2px;">A new scholarship matching your profile is now available.</div>
-                            <div style="font-size:0.74rem;color:#94a3b8;margin-top:4px;"><i class="fas fa-clock me-1"></i>2 hours ago</div>
+                    </c:forEach>
+                    <c:if test="${empty notifications}">
+                        <div class="empty-state" style="padding: 40px 20px; text-align: center; color: #64748b;">
+                            <i class="fas fa-bell-slash" style="font-size: 2.5rem; color: #cbd5e1; margin-bottom: 12px; display: block;"></i>
+                            <p style="margin: 0; font-size: 0.9rem;">You have no notifications yet.</p>
                         </div>
-                        <span class="sd-badge-pill badge-review" style="font-size:0.7rem;height:fit-content;">New</span>
-                    </div>
-                    <div class="notif-item">
-                        <div class="notif-dot-icon notif-read"><i class="fas fa-university"></i></div>
-                        <div>
-                            <div style="font-weight:600;font-size:0.88rem;color:#1e293b;">Welcome to STD Abroad!</div>
-                            <div style="font-size:0.8rem;color:#64748b;margin-top:2px;">Your account has been created. Start exploring universities and courses.</div>
-                            <div style="font-size:0.74rem;color:#94a3b8;margin-top:4px;"><i class="fas fa-clock me-1"></i>Today</div>
-                        </div>
-                    </div>
+                    </c:if>
                 </div>
             </div>
         </div>
@@ -1126,10 +1556,44 @@
         'schol-recommendations':  ['Scholarship Recommendations','Scholarships matching your profile'],
         'saved-scholarships':     ['Saved Scholarships',        'Scholarships you have saved'],
         'notifications':          ['Notifications',             'Stay updated on your applications'],
+        'enquiries':              ['My Enquiries',              'Track and view replies to your enquiries'],
         'help-center':            ['Help Center',               'FAQs and support resources'],
     };
 
-    function showPanel(id, btn) {
+    function toggleEnquiryReply(id) {
+        const detailsRow = document.getElementById('enquiry-details-' + id);
+        if (detailsRow) {
+            if (detailsRow.style.display === 'none') {
+                detailsRow.style.display = 'table-row';
+            } else {
+                detailsRow.style.display = 'none';
+            }
+        }
+    }
+
+    function showPanel(id, btn, isInitialLoad) {
+        // Hide dashboard alerts on manual tab switch
+        if (!isInitialLoad) {
+            const alerts = document.getElementById('dashboardAlerts');
+            if (alerts) alerts.style.display = 'none';
+        }
+
+        // Mark notifications read when panel is opened
+        if (id === 'notifications') {
+            fetch('/user/notifications/mark-read', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                }
+            }).then(response => {
+                if (response.ok) {
+                    document.querySelectorAll('.sd-badge, .sd-notif-dot').forEach(el => {
+                        el.style.display = 'none';
+                    });
+                }
+            }).catch(err => console.error('Error marking notifications read:', err));
+        }
+
         // Hide all panels
         document.querySelectorAll('.sd-panel').forEach(p => p.classList.remove('active'));
         // Remove active from all nav links
@@ -1167,7 +1631,215 @@
             card.style.display = (!q || name.includes(q)) && (!c || country.includes(c)) ? '' : 'none';
         });
     }
+
+    // Auto-open panel based on query parameter
+    window.addEventListener('DOMContentLoaded', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const panelId = urlParams.get('panel');
+        if (panelId && pageMeta[panelId]) {
+            // Find nav button corresponding to this panel using attribute lookup
+            const btn = Array.from(document.querySelectorAll('.sd-nav-link')).find(b => b.getAttribute('onclick')?.includes(panelId));
+            showPanel(panelId, btn, true);
+        }
+
+        // Format relative times for notifications
+        document.querySelectorAll('.notif-time').forEach(el => {
+            const dateStr = el.getAttribute('data-date');
+            if (!dateStr) return;
+            const date = new Date(dateStr);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMins / 60);
+            const diffDays = Math.floor(diffHours / 24);
+
+            if (isNaN(date.getTime())) return;
+
+            if (diffMins < 1) {
+                el.innerHTML = '<i class="fas fa-clock me-1"></i>Just now';
+            } else if (diffMins < 60) {
+                el.innerHTML = '<i class="fas fa-clock me-1"></i>' + diffMins + ' min' + (diffMins > 1 ? 's' : '') + ' ago';
+            } else if (diffHours < 24) {
+                el.innerHTML = '<i class="fas fa-clock me-1"></i>' + diffHours + ' hour' + (diffHours > 1 ? 's' : '') + ' ago';
+            } else if (diffDays < 7) {
+                el.innerHTML = '<i class="fas fa-clock me-1"></i>' + diffDays + ' day' + (diffDays > 1 ? 's' : '') + ' ago';
+            } else {
+                el.innerHTML = '<i class="fas fa-clock me-1"></i>' + date.toLocaleDateString();
+            }
+        });
+    });
+
+    function viewUniversityDetails(btn) {
+        const card = btn.closest('.uni-item');
+        if (!card) return;
+
+        const ds = card.dataset;
+
+        // Header image
+        const headerEl = document.getElementById('uni-modal-header');
+        if (ds.banner && ds.banner.startsWith('http')) {
+            headerEl.style.background = `url('${ds.banner}') center/cover no-repeat`;
+        } else if (ds.image && ds.image.startsWith('http')) {
+            headerEl.style.background = `url('${ds.image}') center/cover no-repeat`;
+        } else {
+            headerEl.style.background = `linear-gradient(135deg, #6366f1, #8b5cf6)`;
+        }
+
+        document.getElementById('uni-modal-name').textContent = ds.name || 'University Details';
+        document.getElementById('uni-modal-location').textContent = `${ds.city || ''}, ${ds.country || ''}`;
+        
+        // Quick Facts
+        document.getElementById('uni-modal-type').textContent = ds.type || 'N/A';
+        document.getElementById('uni-modal-ranking').textContent = ds.ranking ? `#${ds.ranking}` : 'N/A';
+        document.getElementById('uni-modal-fees').textContent = ds.fees ? `$${ds.fees}` : 'N/A';
+        document.getElementById('uni-modal-placement').textContent = ds.placement ? `${ds.placement}%` : 'N/A';
+        document.getElementById('uni-modal-est').textContent = ds.established || 'N/A';
+        document.getElementById('uni-modal-accreditation').textContent = ds.accreditation || 'N/A';
+        
+        const webLink = document.getElementById('uni-modal-website');
+        if (ds.website) {
+            webLink.href = ds.website;
+            webLink.style.display = 'inline-flex';
+        } else {
+            webLink.style.display = 'none';
+        }
+
+        // About & Description
+        document.getElementById('uni-modal-desc').textContent = ds.description || 'No description available.';
+        document.getElementById('uni-modal-docs').textContent = ds.docs || 'No specific documents specified.';
+        document.getElementById('uni-modal-recruiters').textContent = ds.recruiters || 'No recruiter details specified.';
+        
+        // Facilities
+        const facilitiesList = document.getElementById('uni-modal-facilities');
+        facilitiesList.innerHTML = '';
+        const facilities = [
+            { key: 'hasHostel', label: 'Hostel', icon: 'fa-bed' },
+            { key: 'hasLibrary', label: 'Library', icon: 'fa-book' },
+            { key: 'hasSports', label: 'Sports', icon: 'fa-volleyball-ball' },
+            { key: 'hasPlacement', label: 'Placement Support', icon: 'fa-briefcase' },
+            { key: 'hasTransport', label: 'Transport', icon: 'fa-bus' },
+            { key: 'hasWifi', label: 'Wi-Fi', icon: 'fa-wifi' },
+            { key: 'hasLabs', label: 'Laboratories', icon: 'fa-flask' },
+            { key: 'hasCafeteria', label: 'Cafeteria', icon: 'fa-coffee' }
+        ];
+        let hasAnyFacility = false;
+        facilities.forEach(f => {
+            if (ds[f.key] === 'true') {
+                hasAnyFacility = true;
+                const span = document.createElement('span');
+                span.className = 'facility-chip';
+                span.innerHTML = `<i class="fas ${f.icon} text-primary"></i> ${f.label}`;
+                facilitiesList.appendChild(span);
+            }
+        });
+        if (!hasAnyFacility) {
+            facilitiesList.innerHTML = '<span class="text-muted small">No campus facilities listed.</span>';
+        }
+
+        // Contact details
+        document.getElementById('uni-modal-contact-name').textContent = ds.contactName || 'N/A';
+        document.getElementById('uni-modal-contact-email').textContent = ds.contactEmail || 'N/A';
+        document.getElementById('uni-modal-contact-email').href = ds.contactEmail ? `mailto:${ds.contactEmail}` : '#';
+        document.getElementById('uni-modal-contact-phone').textContent = ds.contactPhone || 'N/A';
+        document.getElementById('uni-modal-contact-whatsapp').textContent = ds.contactWhatsapp || 'N/A';
+
+        // Show modal
+        const modal = document.getElementById('uniDetailsModal');
+        modal.style.display = 'flex';
+        setTimeout(() => modal.classList.add('show'), 10);
+    }
+
+    function closeUniversityDetails() {
+        const modal = document.getElementById('uniDetailsModal');
+        modal.classList.remove('show');
+        setTimeout(() => {
+            modal.style.display = 'none';
+        }, 300);
+    }
+
+    window.addEventListener('click', (e) => {
+        const modal = document.getElementById('uniDetailsModal');
+        if (e.target === modal) {
+            closeUniversityDetails();
+        }
+    });
 </script>
+
+<!-- Custom University Details Modal -->
+<div id="uniDetailsModal" class="custom-modal">
+    <div class="custom-modal-content">
+        <button class="custom-modal-close" onclick="closeUniversityDetails()">&times;</button>
+        <div id="uni-modal-header" class="custom-modal-header">
+            <div class="custom-modal-header-overlay"></div>
+            <div class="custom-modal-header-text">
+                <h2 id="uni-modal-name" class="fw-bold mb-1" style="font-size: 1.8rem; margin: 0;"></h2>
+                <div id="uni-modal-location" class="small opacity-90"><i class="fas fa-map-marker-alt me-1 text-danger"></i></div>
+            </div>
+        </div>
+        <div class="custom-modal-body">
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+                <!-- Left Column -->
+                <div style="display: flex; flex-direction: column; gap: 20px;">
+                    <div>
+                        <h4 style="font-size: 1.1rem; font-weight: 700; color: #1e293b; margin-bottom: 8px; border-bottom: 2px solid #f1f5f9; padding-bottom: 6px; display: flex; align-items: center; gap: 8px;"><i class="fas fa-info-circle text-primary"></i> About University</h4>
+                        <p id="uni-modal-desc" style="font-size: 0.88rem; color: #475569; line-height: 1.6; white-space: pre-wrap; margin: 0;"></p>
+                    </div>
+                    <div>
+                        <h4 style="font-size: 1.1rem; font-weight: 700; color: #1e293b; margin-bottom: 8px; border-bottom: 2px solid #f1f5f9; padding-bottom: 6px; display: flex; align-items: center; gap: 8px;"><i class="fas fa-university text-primary"></i> Campus Facilities</h4>
+                        <div id="uni-modal-facilities" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;"></div>
+                    </div>
+                    <div>
+                        <h4 style="font-size: 1.1rem; font-weight: 700; color: #1e293b; margin-bottom: 8px; border-bottom: 2px solid #f1f5f9; padding-bottom: 6px; display: flex; align-items: center; gap: 8px;"><i class="fas fa-file-signature text-primary"></i> Required Documents</h4>
+                        <p id="uni-modal-docs" style="font-size: 0.88rem; color: #475569; line-height: 1.6; white-space: pre-wrap; margin: 0;"></p>
+                    </div>
+                    <div>
+                        <h4 style="font-size: 1.1rem; font-weight: 700; color: #1e293b; margin-bottom: 8px; border-bottom: 2px solid #f1f5f9; padding-bottom: 6px; display: flex; align-items: center; gap: 8px;"><i class="fas fa-handshake text-primary"></i> Top Recruiters</h4>
+                        <p id="uni-modal-recruiters" style="font-size: 0.88rem; color: #475569; line-height: 1.6; white-space: pre-wrap; margin: 0;"></p>
+                    </div>
+                </div>
+                <!-- Right Column -->
+                <div style="display: flex; flex-direction: column; gap: 16px;">
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+                        <h5 style="font-size: 0.95rem; font-weight: 700; color: #0f172a; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px; margin: 0;">Quick Facts</h5>
+                        <div style="font-size: 0.82rem; color: #475569;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <strong>Type:</strong> <span id="uni-modal-type"></span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <strong>Ranking:</strong> <span id="uni-modal-ranking"></span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <strong>Avg Fees:</strong> <span id="uni-modal-fees"></span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <strong>Placement Rate:</strong> <span id="uni-modal-placement"></span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <strong>Established:</strong> <span id="uni-modal-est"></span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <strong>Accreditation:</strong> <span id="uni-modal-accreditation" style="text-align: right; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></span>
+                            </div>
+                        </div>
+                        <a id="uni-modal-website" href="#" target="_blank" class="btn-sd-primary" style="font-size: 0.8rem; padding: 6px 12px; text-decoration: none; justify-content: center; align-items: center; gap: 4px; display: inline-flex;">
+                            Visit Website <i class="fas fa-external-link-alt small"></i>
+                        </a>
+                    </div>
+
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 10px;">
+                        <h5 style="font-size: 0.95rem; font-weight: 700; color: #0f172a; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px; margin: 0;">Admission Contact</h5>
+                        <div style="font-size: 0.82rem; color: #475569; display: flex; flex-direction: column; gap: 8px;">
+                            <div><i class="fas fa-user text-primary me-2"></i> <span id="uni-modal-contact-name"></span></div>
+                            <div><i class="fas fa-envelope text-primary me-2"></i> <a id="uni-modal-contact-email" href="#" style="text-decoration: none; color: inherit;"></a></div>
+                            <div><i class="fas fa-phone-alt text-primary me-2"></i> <span id="uni-modal-contact-phone"></span></div>
+                            <div><i class="fab fa-whatsapp text-success me-2"></i> <span id="uni-modal-contact-whatsapp"></span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 </body>
 </html>

@@ -35,6 +35,9 @@ public class JobProviderDashboardController {
     private CountryRepository countryRepository;
 
     @Autowired
+    private NotificationRepository notificationRepository;
+
+    @Autowired
     private ProviderService providerService;
 
     private Provider getProvider(HttpSession session) {
@@ -176,6 +179,19 @@ public class JobProviderDashboardController {
         if (app != null) {
             app.setStatus(ApplicationStatus.valueOf(status));
             applicationRepository.save(app);
+
+            try {
+                Notification notif = new Notification();
+                notif.setUser(app.getUser());
+                notif.setTitle("Application Status Update");
+                notif.setMessage("Your application status for the position of '" + app.getJob().getTitle() + "' at '" + app.getJob().getProvider().getOrganizationName() + "' has been updated to '" + status + "'.");
+                notif.setType("APPLICATION");
+                notif.setRead(false);
+                notif.setCreatedAt(LocalDateTime.now());
+                notificationRepository.save(notif);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
         return "redirect:/jobprovider/applications";
     }

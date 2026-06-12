@@ -418,7 +418,9 @@
         <div class="js-nav-label">Support</div>
         <button class="js-nav-link" onclick="showPanel('notifications', this)">
             <i class="fas fa-bell"></i> Notifications
-            <span class="js-badge">2</span>
+            <c:if test="${not empty unreadNotificationsCount && unreadNotificationsCount > 0}">
+                <span class="js-badge">${unreadNotificationsCount}</span>
+            </c:if>
         </button>
         <button class="js-nav-link" onclick="showPanel('help-center', this)">
             <i class="fas fa-question-circle"></i> Help Center
@@ -452,7 +454,9 @@
         <div class="js-topbar-actions">
             <button class="js-action-btn" onclick="showPanel('notifications', document.querySelector('[onclick*=notifications]'))" title="Notifications">
                 <i class="fas fa-bell"></i>
-                <span class="js-notif-dot"></span>
+                <c:if test="${not empty unreadNotificationsCount && unreadNotificationsCount > 0}">
+                    <span class="js-notif-dot"></span>
+                </c:if>
             </button>
             <button class="js-action-btn" onclick="showPanel('my-profile', document.querySelector('[onclick*=my-profile]'))" title="Settings">
                 <i class="fas fa-cog"></i>
@@ -1089,28 +1093,34 @@
             <div class="js-card">
                 <div class="js-card-title"><i class="fas fa-bell"></i> Notifications</div>
                 <div style="display:flex;flex-direction:column;gap:16px;">
-                    <div style="display:flex;gap:16px;padding:16px;background:#f0f9ff;border-radius:12px;border:1px solid #bae6fd;">
-                        <div style="width:40px;height:40px;border-radius:10px;background:#0ea5e9;color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;">
-                            <i class="fas fa-briefcase"></i>
+                    <c:forEach var="n" items="${notifications}">
+                        <div style="display:flex;gap:16px;padding:16px;background:${n.read ? '#f8fafc' : '#f0f9ff'};border-radius:12px;border:1px solid ${n.read ? '#e2e8f0' : '#bae6fd'};">
+                            <div style="width:40px;height:40px;border-radius:10px;background:${n.read ? '#64748b' : '#0ea5e9'};color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;">
+                                <c:choose>
+                                    <c:when test="${n.type == 'APPLICATION'}"><i class="fas fa-briefcase"></i></c:when>
+                                    <c:when test="${n.type == 'SCHOLARSHIP'}"><i class="fas fa-star"></i></c:when>
+                                    <c:when test="${n.type == 'ENQUIRY'}"><i class="fas fa-question-circle"></i></c:when>
+                                    <c:otherwise><i class="fas fa-user-check"></i></c:otherwise>
+                                </c:choose>
+                            </div>
+                            <div>
+                                <div style="font-weight:700;color:#0f172a;">${n.title}</div>
+                                <div style="font-size:0.85rem;color:#475569;margin-top:4px;">${n.message}</div>
+                                <div class="notif-time" data-date="${n.createdAt}" style="font-size:0.75rem;color:#94a3b8;margin-top:6px;">
+                                    <i class="fas fa-clock me-1"></i>Just now
+                                </div>
+                            </div>
+                            <c:if test="${!n.read}">
+                                <span style="width:8px;height:8px;border-radius:50%;background:#ef4444;margin-left:auto;margin-top:6px;"></span>
+                            </c:if>
                         </div>
-                        <div>
-                            <div style="font-weight:700;color:#0f172a;">New Job Matches Found</div>
-                            <div style="font-size:0.85rem;color:#475569;margin-top:4px;">We found 5 new jobs matching your profile in Germany.</div>
-                            <div style="font-size:0.75rem;color:#94a3b8;margin-top:6px;"><i class="fas fa-clock me-1"></i>2 hours ago</div>
+                    </c:forEach>
+                    <c:if test="${empty notifications}">
+                        <div class="empty-state" style="padding: 40px 20px; text-align: center; color: #64748b;">
+                            <i class="fas fa-bell-slash" style="font-size: 2.5rem; color: #cbd5e1; margin-bottom: 12px; display: block;"></i>
+                            <p style="margin: 0; font-size: 0.9rem;">You have no notifications yet.</p>
                         </div>
-                        <span style="width:8px;height:8px;border-radius:50%;background:#ef4444;margin-left:auto;margin-top:6px;"></span>
-                    </div>
-                    
-                    <div style="display:flex;gap:16px;padding:16px;background:#f8fafc;border-radius:12px;border:1px solid #e2e8f0;">
-                        <div style="width:40px;height:40px;border-radius:10px;background:#64748b;color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;">
-                            <i class="fas fa-user-check"></i>
-                        </div>
-                        <div>
-                            <div style="font-weight:700;color:#0f172a;">Welcome to STD Abroad</div>
-                            <div style="font-size:0.85rem;color:#475569;margin-top:4px;">Your job seeker account is active. Complete your profile to get discovered by international employers!</div>
-                            <div style="font-size:0.75rem;color:#94a3b8;margin-top:6px;"><i class="fas fa-clock me-1"></i>Yesterday</div>
-                        </div>
-                    </div>
+                    </c:if>
                 </div>
             </div>
         </div>
@@ -1173,6 +1183,22 @@
     };
 
     function showPanel(id, btn) {
+        // Mark notifications read when panel is opened
+        if (id === 'notifications') {
+            fetch('/jobseeker/notifications/mark-read', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                }
+            }).then(response => {
+                if (response.ok) {
+                    document.querySelectorAll('.js-badge, .js-notif-dot').forEach(el => {
+                        el.style.display = 'none';
+                    });
+                }
+            }).catch(err => console.error('Error marking notifications read:', err));
+        }
+
         document.querySelectorAll('.js-panel').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.js-nav-link').forEach(l => l.classList.remove('active'));
         
@@ -1213,6 +1239,34 @@
             card.style.display = matchesQ && matchesC ? '' : 'none';
         });
     }
+
+    // Format relative times for notifications on load
+    window.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.notif-time').forEach(el => {
+            const dateStr = el.getAttribute('data-date');
+            if (!dateStr) return;
+            const date = new Date(dateStr);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMins / 60);
+            const diffDays = Math.floor(diffHours / 24);
+
+            if (isNaN(date.getTime())) return;
+
+            if (diffMins < 1) {
+                el.innerHTML = '<i class="fas fa-clock me-1"></i>Just now';
+            } else if (diffMins < 60) {
+                el.innerHTML = '<i class="fas fa-clock me-1"></i>' + diffMins + ' min' + (diffMins > 1 ? 's' : '') + ' ago';
+            } else if (diffHours < 24) {
+                el.innerHTML = '<i class="fas fa-clock me-1"></i>' + diffHours + ' hour' + (diffHours > 1 ? 's' : '') + ' ago';
+            } else if (diffDays < 7) {
+                el.innerHTML = '<i class="fas fa-clock me-1"></i>' + diffDays + ' day' + (diffDays > 1 ? 's' : '') + ' ago';
+            } else {
+                el.innerHTML = '<i class="fas fa-clock me-1"></i>' + date.toLocaleDateString();
+            }
+        });
+    });
 </script>
 
 </body>

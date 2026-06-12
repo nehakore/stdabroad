@@ -2,6 +2,8 @@ package com.platform.controller;
 
 import com.platform.model.Country;
 import com.platform.model.Enquiry;
+import com.platform.model.User;
+import jakarta.servlet.http.HttpSession;
 import com.platform.service.CountryService;
 import com.platform.service.EnquiryService;
 import com.platform.service.JobService;
@@ -27,6 +29,15 @@ public class HomeController {
     @Autowired
     private EnquiryService enquiryService;
 
+    @Autowired
+    private com.platform.service.CourseService courseService;
+
+    @Autowired
+    private com.platform.repository.SavedCourseRepository savedCourseRepository;
+
+    @Autowired
+    private com.platform.repository.SavedUniversityRepository savedUniversityRepository;
+
     @GetMapping("/")
     public String home(Model model) {
         model.addAttribute("countries", countryService.getAllCountries());
@@ -40,7 +51,7 @@ public class HomeController {
     }
 
     @GetMapping("/universities")
-    public String universities(@org.springframework.web.bind.annotation.RequestParam(value = "countryId", required = false) Long countryId, Model model) {
+    public String universities(@org.springframework.web.bind.annotation.RequestParam(value = "countryId", required = false) Long countryId, Model model, HttpSession session) {
         java.util.List<com.platform.model.University> list = universityService.getAllUniversities().stream()
                 .filter(com.platform.model.University::isApproved)
                 .toList();
@@ -51,6 +62,14 @@ public class HomeController {
         
         model.addAttribute("universities", list);
         model.addAttribute("countries", countryService.getAllCountries());
+        
+        User user = (User) session.getAttribute("loggedInUser");
+        if (user != null) {
+            java.util.List<Long> savedUniIds = savedUniversityRepository.findByUserId(user.getId())
+                    .stream().map(su -> su.getUniversity().getId()).toList();
+            model.addAttribute("savedUniIds", savedUniIds);
+        }
+        
         return "user/universities";
     }
 
@@ -64,6 +83,7 @@ public class HomeController {
     @GetMapping("/enquiry")
     public String enquiryPage(Model model) {
         model.addAttribute("enquiry", new Enquiry());
+        model.addAttribute("universities", universityService.getAllUniversities().stream().filter(com.platform.model.University::isApproved).toList());
         return "user/enquiry";
     }
 
@@ -82,6 +102,20 @@ public class HomeController {
         }
         model.addAttribute("countries", countryService.getAllCountries());
         return "user/scholarships";
+    }
+
+    @GetMapping("/courses")
+    public String courses(Model model, HttpSession session) {
+        model.addAttribute("courses", courseService.getAllCourses());
+        model.addAttribute("countries", countryService.getAllCountries());
+        
+        User user = (User) session.getAttribute("loggedInUser");
+        if (user != null) {
+            java.util.List<Long> savedCourseIds = savedCourseRepository.findByUserId(user.getId())
+                    .stream().map(sc -> sc.getCourse().getId()).toList();
+            model.addAttribute("savedCourseIds", savedCourseIds);
+        }
+        return "user/courses";
     }
 
     @GetMapping("/visa-guide")
@@ -107,6 +141,9 @@ public class HomeController {
 
     @PostMapping("/submit-enquiry")
     public String submitEnquiry(Enquiry enquiry) {
+        if (enquiry.getUniversity() != null && enquiry.getUniversity().getId() == null) {
+            enquiry.setUniversity(null);
+        }
         enquiryService.saveEnquiry(enquiry);
         return "redirect:/?enquirySuccess=true";
     }

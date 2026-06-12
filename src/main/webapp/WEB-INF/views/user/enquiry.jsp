@@ -42,6 +42,15 @@
                                 <option value="General">General Inquiry</option>
                             </select>
                         </div>
+                        <div class="col-md-12">
+                            <label class="form-label fw-medium">Select University (Optional - routes to Provider)</label>
+                            <select name="university.id" class="form-select rounded-pill">
+                                <option value="">General Inquiry (Admin only)</option>
+                                <c:forEach var="uni" items="${universities}">
+                                    <option value="${uni.id}">${uni.name} (${uni.city}, ${uni.country.name})</option>
+                                </c:forEach>
+                            </select>
+                        </div>
                         <div class="col-12">
                             <label class="form-label fw-medium">Message</label>
                             <textarea name="message" class="form-control" rows="4" style="border-radius: 12px;" required></textarea>

@@ -3,9 +3,12 @@ package com.platform.controller;
 import com.platform.model.Admin;
 import com.platform.model.Provider;
 import com.platform.model.User;
+import com.platform.model.Notification;
+import com.platform.repository.NotificationRepository;
 import com.platform.service.AdminService;
 import com.platform.service.ProviderService;
 import com.platform.service.UserService;
+import java.time.LocalDateTime;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -30,6 +33,12 @@ public class AuthController {
     
     @Autowired
     private AdminService adminService;
+
+    @Autowired
+    private NotificationRepository notificationRepository;
+
+    @Autowired
+    private com.platform.security.JwtUtil jwtUtil;
 
     @GetMapping({"/login", "/user/login"})
     public String loginPage() {
@@ -82,6 +91,9 @@ public class AuthController {
             if (user != null) {
                 session.setAttribute("loggedInUser", user);
                 session.setAttribute("role", user.getRole() != null ? user.getRole().toString() : "USER");
+                
+                String token = jwtUtil.generateToken(user);
+                session.setAttribute("jwtToken", token);
                 
                 if (com.platform.model.Role.JOB_SEEKER.equals(user.getRole())) {
                     return "redirect:/jobseeker/dashboard";
@@ -147,7 +159,19 @@ public class AuthController {
 
     @PostMapping("/register-user")
     public String registerUser(User user) {
-        userService.saveUser(user);
+        User savedUser = userService.saveUser(user);
+        try {
+            Notification welcome = new Notification();
+            welcome.setUser(savedUser);
+            welcome.setTitle("Welcome to STD Abroad!");
+            welcome.setMessage("Your account has been created successfully. Start exploring top universities and courses!");
+            welcome.setType("SYSTEM");
+            welcome.setRead(false);
+            welcome.setCreatedAt(LocalDateTime.now());
+            notificationRepository.save(welcome);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return "redirect:/login?registered=true";
     }
 

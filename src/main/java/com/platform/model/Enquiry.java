@@ -59,6 +59,11 @@ public class Enquiry {
     public String getType() { return type; }
     public void setType(String type) { this.type = type; }
     
+    private String reply;
+
+    public String getReply() { return reply; }
+    public void setReply(String reply) { this.reply = reply; }
+
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }

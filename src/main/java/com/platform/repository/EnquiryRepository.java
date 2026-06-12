@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface EnquiryRepository extends JpaRepository<Enquiry, Long> {
     List<Enquiry> findByUniversity_Provider_Id(Long providerId);
+    List<Enquiry> findByEmail(String email);
 }

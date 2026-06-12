@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
+import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Controller
 @RequestMapping("/provider")
@@ -32,6 +34,12 @@ public class ProviderDashboardController {
 
     @Autowired
     private ApplicationRepository applicationRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private NotificationRepository notificationRepository;
 
     // Helper to check provider session
     private Provider getLoggedInProvider(HttpSession session) {
@@ -260,5 +268,44 @@ public class ProviderDashboardController {
         
         redirectAttributes.addFlashAttribute("successMsg", "University updated successfully! Waiting for admin approval.");
         return "redirect:/provider/universities";
+    }
+
+    @PostMapping("/enquiries/reply")
+    public String replyToEnquiry(@RequestParam("id") Long enquiryId, 
+                                 @RequestParam("reply") String reply, 
+                                 HttpSession session, 
+                                 RedirectAttributes redirectAttributes) {
+        Provider provider = getLoggedInProvider(session);
+        if (provider == null) return "redirect:/provider/login";
+        
+        Enquiry enquiry = enquiryRepository.findById(enquiryId).orElse(null);
+        if (enquiry != null && enquiry.getUniversity() != null && 
+            enquiry.getUniversity().getProvider().getId().equals(provider.getId())) {
+            enquiry.setReply(reply);
+            enquiry.setStatus("Replied");
+            enquiryRepository.save(enquiry);
+            
+            try {
+                Optional<User> studentOpt = userRepository.findByEmail(enquiry.getEmail());
+                if (studentOpt.isPresent()) {
+                    Notification notif = new Notification();
+                    notif.setUser(studentOpt.get());
+                    notif.setTitle("New Enquiry Reply");
+                    String uniName = enquiry.getUniversity() != null ? enquiry.getUniversity().getName() : "University";
+                    notif.setMessage("The representative of " + uniName + " has replied to your enquiry: \"" + reply + "\"");
+                    notif.setType("ENQUIRY");
+                    notif.setRead(false);
+                    notif.setCreatedAt(LocalDateTime.now());
+                    notificationRepository.save(notif);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            
+            redirectAttributes.addFlashAttribute("successMsg", "Reply sent successfully!");
+        } else {
+            redirectAttributes.addFlashAttribute("errorMsg", "Enquiry not found or access denied.");
+        }
+        return "redirect:/provider/enquiries";
     }
 }

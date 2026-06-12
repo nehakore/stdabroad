@@ -9,6 +9,19 @@
         <h2 class="fw-bold mb-0">Student Enquiries</h2>
     </div>
 
+    <c:if test="${not empty successMsg}">
+        <div class="alert alert-success alert-dismissible fade show shadow-sm mb-4" role="alert">
+            <i class="fas fa-check-circle me-2"></i> ${successMsg}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    </c:if>
+    <c:if test="${not empty errorMsg}">
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm mb-4" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i> ${errorMsg}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    </c:if>
+
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -31,7 +44,17 @@
                                 <td>${e.university.name}</td>
                                 <td>${e.course != null ? e.course.name : '-'}</td>
                                 <td>
-                                    <span class="badge ${e.status == 'PENDING' ? 'bg-warning text-dark' : 'bg-success'}">${e.status}</span>
+                                    <c:choose>
+                                        <c:when test="${e.status == 'New' || e.status == 'PENDING'}">
+                                            <span class="badge bg-warning text-dark">${e.status}</span>
+                                        </c:when>
+                                        <c:when test="${e.status == 'Replied'}">
+                                            <span class="badge bg-info text-dark">${e.status}</span>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <span class="badge bg-success">${e.status}</span>
+                                        </c:otherwise>
+                                    </c:choose>
                                 </td>
                                 <td class="text-end pe-4">
                                     <button class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#enquiryModal${e.id}">
@@ -73,10 +96,35 @@
                             <small class="text-muted d-block fw-bold mb-1">University</small>
                             <div>${e.university.name}</div>
                         </div>
-                        <div class="bg-light p-3 rounded border">
+                        <div class="bg-light p-3 rounded border mb-3">
                             <small class="text-muted d-block fw-bold mb-2">Message Content</small>
                             <p class="mb-0 text-dark" style="white-space: pre-wrap;">${e.message}</p>
                         </div>
+                        
+                        <c:if test="${not empty e.reply}">
+                            <div class="bg-light p-3 rounded border border-info mb-3">
+                                <small class="text-info d-block fw-bold mb-2"><i class="fas fa-reply me-1"></i> Your Previous Reply</small>
+                                <p class="mb-0 text-dark" style="white-space: pre-wrap;">${e.reply}</p>
+                            </div>
+                        </c:if>
+
+                        <form action="/provider/enquiries/reply" method="POST" class="mt-3">
+                            <input type="hidden" name="id" value="${e.id}" />
+                            <div class="mb-3">
+                                <label class="form-label fw-bold text-muted small mb-1">
+                                    <c:choose>
+                                        <c:when test="${not empty e.reply}">Update Reply</c:when>
+                                        <c:otherwise>Write a Reply</c:otherwise>
+                                    </c:choose>
+                                </label>
+                                <textarea name="reply" class="form-control" rows="3" placeholder="Type your response to the student here..." required>${e.reply}</textarea>
+                            </div>
+                            <div class="text-end">
+                                <button type="submit" class="btn btn-primary btn-sm px-3">
+                                    <i class="fas fa-paper-plane me-1"></i> Send Reply
+                                </button>
+                            </div>
+                        </form>
                     </div>
                     <div class="modal-footer bg-light border-top-0">
                         <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Close</button>
